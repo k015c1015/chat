@@ -13,7 +13,7 @@
         $userID = mt_rand(0, 99999999);
       } while (in_array($userID, $json));
     } else {
-      $json = array(12345678);
+      $json = array();
     }
     array_unshift($json, $userID);
     file_put_contents($usersFilePath, json_encode($json));
