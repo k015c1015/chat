@@ -4,7 +4,7 @@
   logAccess($_SERVER);
   initFiles();
   
-  //
+  // create api/files
   function initFiles() {
     if (!file_exists("../files")) {
       mkdir("../files");
@@ -14,31 +14,19 @@
     }
   }
   
-  //
-  function checkBAN($name) {
+  // chack BAN users
+  function checkBAN($user) {
     $banFilePath = "../files/ban.txt";
     $array = explode("<>", trim(file_get_contents($banFilePath)));
-    foreach ($array as $key => $value) {
-      if ($name == $value) {
+    foreach ($array as $value) {
+      if ($user == $value) {
         return false;
       }
     }
     return true;
   }
   
-  //
-  function getJapaneseName($userID) {
-    $kanjis = array(
-      "川", "島", "田", "原", "小", "杉", "大", "中", "西", "東",
-      "木", "山", "本", "村", "林", "松", "上", "下", "南", "北"
-    );
-    $k1 = (intval(substr($userID, 0, 1)) + intval(substr($userID, 1, 1)) + intval(substr($userID, 2, 1)) + intval(substr($userID, 3, 1))) % 20;
-    $k2 = (intval(substr($userID, 4, 1)) + intval(substr($userID, 5, 1)) + intval(substr($userID, 6, 1)) + intval(substr($userID, 7, 1))) % 20;
-    $name = $kanjis[$k1].$kanjis[$k2];
-    return $name;
-  }
-  
-  //
+  // check Emoji
   function isEmoji($text) {
     return (
       (ord($text) >= 55000)&&
@@ -60,10 +48,12 @@
   
   //
   function logAccess($serverInfo) {
-    $accessLogFilePath = "../files/access-log.txt";
+    $filePath = "../files/access-log.txt";
     $serverInfo = "[".date("Y-m-d H:i:s")."] ".$serverInfo["PHP_SELF"].": ".$serverInfo["REMOTE_ADDR"].", ".$serverInfo["HTTP_USER_AGENT"];
-    $str = file_get_contents($accessLogFilePath)."\n".$serverInfo;
-    file_put_contents($accessLogFilePath, $str);
+    $defaultMaxCount = 100;
+    $str = $serverInfo."\n".file_get_contents($filePath);
+    $str = implode("\n", array_slice(explode("\n", $str), 0, $defaultMaxCount));
+    file_put_contents($filePath, $str);
   }
   
   //
@@ -72,12 +62,9 @@
     $json = array();
     if (is_file($filePath)) {
       $lines = json_decode(file_get_contents($filePath));
-      for ($i = count($lines) - 1; $i >= 0; $i--) {
-        $line = $lines[$i];
-        $id = $line[0];
-        if ($id >= $startID) {
-          array_unshift($json, $line);
-          $startID = $id;
+      for ($i = 0; $i < count($lines); $i++) {
+        if ($lines[$i][0] >= $startID) {
+          array_push($json, $lines[$i]);
         }
       }
       return json_encode($json);
